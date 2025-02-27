@@ -1,0 +1,7 @@
+{
+  "name": "live_scanner",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

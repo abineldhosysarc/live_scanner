@@ -9,76 +9,87 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div class="ion-padding">
-    <div class="ion-text-center ion-padding">
-      <ion-button color="success" (click)="startTextDetection()" [disabled]="isLoading">
-        <ion-spinner *ngIf="isLoading"></ion-spinner>
-        <ion-icon name="card-outline" *ngIf="!isLoading"></ion-icon>
-        <span class="ion-padding-start" *ngIf="!isLoading">Capture PAN</span>
-      </ion-button>
+
+
+<ion-content>
+  <div id="camera-preview" *ngIf="isScanning" class="camera-preview"></div>
+    <div *ngIf="isScanning" class="scan-overlay">
+    <div class="scan-instructions">
+      <ion-text color="light">
+        <h2>Scanning PAN Card</h2>
+        <p>Position your PAN card within the frame</p>
+      </ion-text>
+      <ion-button color="light" (click)="stopScanning()">Cancel</ion-button>
     </div>
-
-    <ion-item *ngIf="extractedText && !error" lines="none" class="ion-margin-bottom">
-      <ion-icon 
-        [name]="isPanCard ? 'checkmark-circle' : 'close-circle'" 
-        [color]="isPanCard ? 'success' : 'danger'" 
-        slot="start">
-      </ion-icon>
-      <ion-label>
-        <h2>{{ isPanCard ? 'Valid PAN Card Detected' : 'Not a PAN Card' }}</h2>
-      </ion-label>
-    </ion-item>
-
-    <ion-card *ngIf="isPanCard && Object.keys(panDetails).length > 0">
-      <ion-card-header color="primary">
-        <ion-card-title>PAN Card Details</ion-card-title>
+  </div>
+  
+  <div class="ion-padding" [ngClass]="{'hidden': isScanning}">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>PAN Details</ion-card-title>
       </ion-card-header>
-
+      <div class="ion-text-center ion-padding">
+        <ion-button color="success" (click)="startTextDetection()" [disabled]="isLoading">
+          <ion-spinner *ngIf="isLoading"></ion-spinner>
+          <ion-icon name="card-outline" *ngIf="!isLoading"></ion-icon>
+          <span class="ion-padding-start" *ngIf="!isLoading">Capture PAN</span>
+        </ion-button>
+      </div>
       <ion-card-content>
-        <ion-list lines="full">
-          <ion-item *ngIf="panDetails.name">
-            <ion-label>
-              <h2>Name</h2>
-              <p>{{ panDetails.name }}</p>
-            </ion-label>
+        <ion-progress-bar *ngIf="isLoading" type="indeterminate"></ion-progress-bar>
+        
+        <div *ngIf="isPanCard" class="success-message">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          Valid PAN Card Detected
+        </div>
+        
+        <ion-list *ngIf="Object.keys(panDetails).length > 0">
+          <ion-list-header>
+            <ion-label>PAN Card Details</ion-label>
+          </ion-list-header>
+          
+          <ion-item>
+            <ion-label position="stacked">Name</ion-label>
+            <ion-text>{{ panDetails.name }}</ion-text>
           </ion-item>
-
-          <ion-item *ngIf="panDetails.fatherName">
-            <ion-label>
-              <h2>Father's Name</h2>
-              <p>{{ panDetails.fatherName }}</p>
-            </ion-label>
+          
+          <ion-item>
+            <ion-label position="stacked">Father's Name</ion-label>
+            <ion-text>{{ panDetails.fatherName }}</ion-text>
           </ion-item>
-
-          <ion-item *ngIf="panDetails.dob">
-            <ion-label>
-              <h2>Date of Birth</h2>
-              <p>{{ panDetails.dob }}</p>
-            </ion-label>
+          
+          <ion-item>
+            <ion-label position="stacked">Date of Birth</ion-label>
+            <ion-text>{{ panDetails.dob }}</ion-text>
           </ion-item>
-
-          <ion-item *ngIf="panDetails.panNumber">
-            <ion-label>
-              <h2>PAN Number</h2>
-              <p class="ion-text-uppercase">{{ panDetails.panNumber }}</p>
-            </ion-label>
+          
+          <ion-item>
+            <ion-label position="stacked">PAN Number</ion-label>
+            <ion-text>{{ panDetails.panNumber }}</ion-text>
           </ion-item>
         </ion-list>
+        
+        <div *ngIf="extractedText" class="raw-text">
+          <ion-list-header>
+            <ion-label>Raw Detected Text</ion-label>
+          </ion-list-header>
+          <ion-text>{{ extractedText }}</ion-text>
+        </div>
+        
+        <div *ngIf="error" class="error-message">
+          <ion-icon name="alert-circle"></ion-icon>
+          {{ error }}
+        </div>
       </ion-card-content>
     </ion-card>
-
-    <ion-card *ngIf="extractedText">
-      <ion-card-header>
-        <ion-card-title>Raw Detected Text</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <pre>{{ extractedText }}</pre>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-text color="danger" *ngIf="error">
-      <p class="ion-text-center">{{ error }}</p>
-    </ion-text>
   </div>
 </ion-content>
+
+<ion-footer *ngIf="isPanCard">
+  <ion-toolbar>
+    <ion-button expand="full" (click)="closeapp()">
+      <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+      Done
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

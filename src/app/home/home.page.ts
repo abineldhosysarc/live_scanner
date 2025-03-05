@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { Platform } from '@ionic/angular';
-import { MlKitTextService } from '../mlkit-text.service';
 import { App } from '@capacitor/app';
+import { MlKitTextService } from '../mlkit-text.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -9,24 +10,44 @@ import { App } from '@capacitor/app';
   styleUrls: ['home.page.scss'],
   standalone: false,
 })
-export class HomePage {
+export class HomePage implements OnInit, OnDestroy {
   extractedText: string = '';
   isLoading: boolean = false;
   error: string = '';
   isPanCard: boolean = false;
+  isScanning: boolean = false;
   panDetails: {
     name?: string;
     fatherName?: string;
     dob?: string;
     panNumber?: string;
   } = {};
-  
+   
   Object = Object;
+  private subscription: Subscription = new Subscription();
 
   constructor(
     private mlKitService: MlKitTextService,
-    private platform: Platform
+    private platform: Platform,
+    private ngZone: NgZone
   ) {}
+
+  ngOnInit() {
+    // Subscribe to text detection results
+    this.subscription.add(
+      this.mlKitService.textDetected$.subscribe(text => {
+        if (text) {
+          this.processTextResult(text);
+        }
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    // Make sure to stop scanning and clean up subscriptions when component is destroyed
+    this.stopScanning();
+    this.subscription.unsubscribe();
+  }
 
   async startTextDetection() {
     if (!this.platform.is('hybrid')) {
@@ -41,47 +62,61 @@ export class HomePage {
     this.extractedText = '';
     this.panDetails = {};
     this.isPanCard = false;
-
+    
     try {
-      this.extractedText = await this.mlKitService.detectTextFromImage();
-      // this.extractedText =
-      // 'GOVT.OFINDIAINCOMETAXDEPARTMENTPermanentAccountNumber(PAN)CardName:RAJESHKUMARFather\'sName:SURESHKUMARDateofBirth: 15/08/1990 PAN Number: ABCDE1234F';
-
-      this.isPanCard = this.verifyPanCard(this.extractedText);
-      if (this.isPanCard) {
-        this.parsePanDetails(this.extractedText);
-      } else {
-        this.error = 'The scanned card does not appear to be a valid PAN card.';
-      }
+      this.isScanning = true;
+      console.log("Starting camera preview");
+      
+      await this.mlKitService.startCameraPreview();
     } catch (error) {
-      this.error = 'Failed to detect text. Please try again.';
-      console.error('Detection error:', error);
-    } finally {
+      this.isScanning = false;
+      this.isLoading = false;
+      this.error = 'Failed to start camera. Please try again.';
+      console.error('Camera preview error:', error);
+    }
+  }
+
+  processTextResult(text: string) {
+    this.ngZone.run(() => {
+      this.extractedText = text;
+      
+      this.isPanCard = this.verifyPanCard(text);
+      
+      if (this.isPanCard) {
+        this.parsePanDetails(text);
+        this.stopScanning();        
+        this.isLoading = false;
+      }
+    });
+  }
+
+  stopScanning() {
+    if (this.isScanning) {
+      console.log("Stopping camera preview");
+      this.mlKitService.stopCameraPreview();
+      this.isScanning = false;
       this.isLoading = false;
     }
   }
-  
+
   verifyPanCard(text: string): boolean {
+    if (!text) return false;
+    
     const upperText = text.toUpperCase();
-    
-    // Check for common PAN card text markers
-    const hasTaxDept = upperText.includes('INCOME TAX DEPARTMENT') || 
-                        upperText.includes('INCOME-TAX DEPARTMENT');
-    const hasPAN = upperText.includes('PERMANENT ACCOUNT NUMBER') || 
-                   upperText.includes('PAN');
-    
-    // Check if there's a valid PAN number pattern
+       
+    const hasTaxDept = upperText.includes('INCOME TAX DEPARTMENT') ||
+                       upperText.includes('INCOME-TAX DEPARTMENT');
+    const hasPAN = upperText.includes('PERMANENT ACCOUNT NUMBER') ||
+                  upperText.includes('PAN');
+       
     const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]{1}/;
     const hasPanNumber = panRegex.test(upperText);
-    
+       
     return (hasTaxDept && hasPAN && hasPanNumber);
   }
-
-
+  
   parsePanDetails(text: string) {
     if (!text) return;
-
-    // Normalize text for consistent parsing
     const upperText = text.toUpperCase();
 
     // Extract PAN Number
@@ -99,7 +134,7 @@ export class HomePage {
     }
 
     // Extract Father's Name using regex
-    const fatherNameRegex = /FATHER['’]S?\s+NAME[:\s]+([A-Z\s]+)DATE/;
+    const fatherNameRegex = /FATHER['']S?\s+NAME[:\s]+([A-Z\s]+)DATE/;
     const fatherMatch = upperText.match(fatherNameRegex);
     if (fatherMatch) {
       this.panDetails.fatherName = this.formatName(fatherMatch[1]);
@@ -114,19 +149,20 @@ export class HomePage {
 
     console.log('Parsed PAN Details:', this.panDetails);
   }
-
-
+  
   formatName(name: string): string {
     if (!name) return '';
-    
+       
     return name
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ')
       .trim();
   }
-  closeapp(){
+
+  closeapp() {
     console.log("closed");
-    App.exitApp(); 
+    this.stopScanning(); 
+    App.exitApp();
   }
 }

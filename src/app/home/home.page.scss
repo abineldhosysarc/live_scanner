@@ -47,15 +47,74 @@ ion-header {
     }
     
   }
-
-  ion-header {
-    padding-top: calc(var(--ion-safe-area-top, 0) + 15px);
+  .camera-preview {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background-color: #000;
   }
-  :root {
-    --ion-safe-area-top: env(safe-area-inset-top);
+  
+  .scan-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 11;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
   }
-  ion-toolbar{
-    padding-top: calc(var(--ion-safe-area-top, 0) + 15px);
-
+  
+  .scan-instructions {
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    
+    h2 {
+      margin-bottom: 10px;
+    }
+    
+    p {
+      margin-bottom: 20px;
+    }
+  }
+  
+  .hidden {
+    display: none !important;
+  }
+  
+  .success-message {
+    color: green;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    
+    ion-icon {
+      margin-right: 5px;
+      font-size: 20px;
+    }
+  }
+  
+  .error-message {
+    color: red;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    
+    ion-icon {
+      margin-right: 5px;
+      font-size: 20px;
+    }
+  }
+  
+  .raw-text {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
   }
 }

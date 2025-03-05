@@ -1,5 +1,5 @@
 {
-  "name": "live_scanner",
+  "name": "preview_scanner",
   "integrations": {
     "capacitor": {}
   },

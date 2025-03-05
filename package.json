@@ -1,5 +1,5 @@
 {
-  "name": "live_scanner",
+  "name": "preview_scanner",
   "version": "0.0.1",
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@capacitor-community/camera-preview": "^7.0.0",
     "@capacitor/android": "7.0.1",
     "@capacitor/app": "7.0.0",
     "@capacitor/camera": "^7.0.0",

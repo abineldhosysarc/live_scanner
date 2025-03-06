@@ -126,29 +126,29 @@ export class HomePage implements OnInit, OnDestroy {
       this.panDetails.panNumber = panMatch[0];
     }
 
-    // Extract Name using regex
-    const nameRegex = /NAME[:\s]+([A-Z\s]+)FATHER/;
-    const nameMatch = upperText.match(nameRegex);
-    if (nameMatch) {
-      this.panDetails.name = this.formatName(nameMatch[1]);
+      // Extract Name
+      const nameRegex = /NAME[:\s]+([A-Z\s]+?)\n|NAME[:\s]+([A-Z\s]+)FATHER/;
+      const nameMatch = upperText.match(nameRegex);
+      if (nameMatch) {
+        this.panDetails.name = this.formatName(nameMatch[1] || nameMatch[2]);
+      }
+  
+      // Extract Father's Name
+      const fatherNameRegex = /FATHER['’]S?\s+NAME[:\s]+([A-Z\s]+?)\n|FATHER['’]S?\s+NAME\n([A-Z\s]+)/;
+      const fatherMatch = upperText.match(fatherNameRegex);
+      if (fatherMatch) {
+        this.panDetails.fatherName = this.formatName(fatherMatch[1] || fatherMatch[2]);
+      }
+  
+      // Extract Date of Birth
+      const dobRegex = /DATE\s+OF\s+BIRTH[:\s]+(\d{2}\/\d{2}\/\d{4})|\b(\d{2}\/\d{2}\/\d{4})\b/;
+      const dobMatch = upperText.match(dobRegex);
+      if (dobMatch) {
+        this.panDetails.dob = dobMatch[1] || dobMatch[2];
+      }
+  
+      console.log('Parsed PAN Details:', this.panDetails);
     }
-
-    // Extract Father's Name using regex
-    const fatherNameRegex = /FATHER['']S?\s+NAME[:\s]+([A-Z\s]+)DATE/;
-    const fatherMatch = upperText.match(fatherNameRegex);
-    if (fatherMatch) {
-      this.panDetails.fatherName = this.formatName(fatherMatch[1]);
-    }
-
-    // Extract Date of Birth using regex
-    const dobRegex = /\d{2}\/\d{2}\/\d{4}/;
-    const dobMatch = upperText.match(dobRegex);
-    if (dobMatch) {
-      this.panDetails.dob = dobMatch[0];
-    }
-
-    console.log('Parsed PAN Details:', this.panDetails);
-  }
   
   formatName(name: string): string {
     if (!name) return '';

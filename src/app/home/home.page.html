@@ -48,26 +48,27 @@
             <ion-label>PAN Card Details</ion-label>
           </ion-list-header>
           
-          <ion-item>
+          <ion-item *ngIf="panDetails.name">
             <ion-label position="stacked">Name</ion-label>
             <ion-text>{{ panDetails.name }}</ion-text>
           </ion-item>
           
-          <ion-item>
+          <ion-item *ngIf="panDetails.fatherName">
             <ion-label position="stacked">Father's Name</ion-label>
             <ion-text>{{ panDetails.fatherName }}</ion-text>
           </ion-item>
           
-          <ion-item>
+          <ion-item *ngIf="panDetails.dob">
             <ion-label position="stacked">Date of Birth</ion-label>
             <ion-text>{{ panDetails.dob }}</ion-text>
           </ion-item>
           
-          <ion-item>
+          <ion-item *ngIf="panDetails.panNumber">
             <ion-label position="stacked">PAN Number</ion-label>
             <ion-text>{{ panDetails.panNumber }}</ion-text>
           </ion-item>
         </ion-list>
+        
         
         <div *ngIf="extractedText" class="raw-text">
           <ion-list-header>

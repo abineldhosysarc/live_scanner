@@ -1,23 +1,21 @@
-<ion-header class="headerBackground"  mode="md">
+<ion-header class="headerBackground" mode="md">
   <ion-toolbar class="headerToolbar" mode="md">
     <ion-buttons slot="end">
       <ion-button fill="clear" (click)="closeapp()">
         <ion-icon name="close-outline"></ion-icon>
-          </ion-button>
+      </ion-button>
     </ion-buttons>
-    <ion-title class="headerTitle">PAN Details</ion-title>
+    <ion-title class="headerTitle">{{ documentType || 'Document' }} Details</ion-title>
   </ion-toolbar>
 </ion-header>
 
-
-
 <ion-content>
   <div id="camera-preview" *ngIf="isScanning" class="camera-preview"></div>
-    <div *ngIf="isScanning" class="scan-overlay">
+  <div *ngIf="isScanning" class="scan-overlay">
     <div class="scan-instructions">
       <ion-text color="light">
-        <h2>Scanning PAN Card</h2>
-        <p>Position your PAN card within the frame</p>
+        <h2>Scanning Document</h2>
+        <p>Position your PAN or Aadhaar card within the frame</p>
       </ion-text>
       <ion-button color="light" (click)="stopScanning()">Cancel</ion-button>
     </div>
@@ -26,13 +24,13 @@
   <div class="ion-padding" [ngClass]="{'hidden': isScanning}">
     <ion-card>
       <ion-card-header>
-        <ion-card-title>PAN Details</ion-card-title>
+        <ion-card-title>{{ documentType || 'Document' }} Details</ion-card-title>
       </ion-card-header>
       <div class="ion-text-center ion-padding">
         <ion-button color="success" (click)="startTextDetection()" [disabled]="isLoading">
           <ion-spinner *ngIf="isLoading"></ion-spinner>
           <ion-icon name="card-outline" *ngIf="!isLoading"></ion-icon>
-          <span class="ion-padding-start" *ngIf="!isLoading">Capture PAN</span>
+          <span class="ion-padding-start" *ngIf="!isLoading">Capture Card</span>
         </ion-button>
       </div>
       <ion-card-content>
@@ -43,6 +41,11 @@
           Valid PAN Card Detected
         </div>
         
+        <div *ngIf="isAadhaarCard" class="success-message">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          Valid Aadhaar Card Detected
+        </div>
+        <!-- PAN Card Details -->
         <ion-list *ngIf="Object.keys(panDetails).length > 0">
           <ion-list-header>
             <ion-label>PAN Card Details</ion-label>
@@ -69,6 +72,36 @@
           </ion-item>
         </ion-list>
         
+        <ion-list *ngIf="Object.keys(aadhaarDetails).length > 0">
+          <ion-list-header>
+            <ion-label>Aadhaar Card Details</ion-label>
+          </ion-list-header>
+          
+          <ion-item *ngIf="aadhaarDetails.name">
+            <ion-label position="stacked">Name</ion-label>
+            <ion-text>{{ aadhaarDetails.name }}</ion-text>
+          </ion-item>
+          
+          <ion-item *ngIf="aadhaarDetails.dob">
+            <ion-label position="stacked">Date of Birth</ion-label>
+            <ion-text>{{ aadhaarDetails.dob }}</ion-text>
+          </ion-item>
+          
+          <ion-item *ngIf="aadhaarDetails.gender">
+            <ion-label position="stacked">Gender</ion-label>
+            <ion-text>{{ aadhaarDetails.gender }}</ion-text>
+          </ion-item>
+          
+          <ion-item *ngIf="aadhaarDetails.aadhaarNumber">
+            <ion-label position="stacked">Aadhaar Number</ion-label>
+            <ion-text>{{ aadhaarDetails.aadhaarNumber }}</ion-text>
+          </ion-item>
+          
+          <ion-item *ngIf="aadhaarDetails.mobileNumber">
+            <ion-label position="stacked">Mobile Number</ion-label>
+            <ion-text>{{ aadhaarDetails.mobileNumber }}</ion-text>
+          </ion-item>
+        </ion-list>
         
         <div *ngIf="extractedText" class="raw-text">
           <ion-list-header>
@@ -86,7 +119,7 @@
   </div>
 </ion-content>
 
-<ion-footer *ngIf="isPanCard">
+<ion-footer *ngIf="isPanCard || isAadhaarCard">
   <ion-toolbar>
     <ion-button expand="full" (click)="closeapp()">
       <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>

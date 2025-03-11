@@ -3,6 +3,7 @@ import { Platform } from '@ionic/angular';
 import { App } from '@capacitor/app';
 import { MlKitTextService } from '../mlkit-text.service';
 import { Subscription } from 'rxjs';
+import { BarcodeScannerService } from '../services/barcode-scanner.service';
 
 @Component({
   selector: 'app-home',
@@ -14,6 +15,8 @@ export class HomePage implements OnInit, OnDestroy {
   extractedText: string = '';
   isLoading: boolean = false;
   error: string = '';
+  scannedData: string | null = null;
+
   isPanCard: boolean = false;
   isAadhaarCard: boolean = false;
   isScanning: boolean = false;
@@ -38,7 +41,8 @@ export class HomePage implements OnInit, OnDestroy {
   constructor(
     private mlKitService: MlKitTextService,
     private platform: Platform,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private barcodeScanner: BarcodeScannerService
   ) {}
 
   ngOnInit() {
@@ -51,6 +55,42 @@ export class HomePage implements OnInit, OnDestroy {
       })
     );
   }
+
+  async requestPermissions() {
+    const permission = await this.barcodeScanner.requestPermissions();
+    console.log('Permission granted:', permission);
+    if (permission === 'denied') {
+      alert('Camera permission denied. Please enable it in settings.');
+    }
+  }
+  
+
+  async startScan() {
+    await this.requestPermissions();
+
+    this.scannedData = await this.barcodeScanner.scanSingleBarcode();
+  }
+
+  async stopScan() {
+    await this.barcodeScanner.stopScan();
+  }
+
+  async checkPermissions() {
+    const permission = await this.barcodeScanner.checkPermissions();
+    console.log('Camera permission:', permission);
+  }
+
+
+
+
+
+
+
+
+
+
+
+
 
   ngOnDestroy() {
     // Make sure to stop scanning and clean up subscriptions when component is destroyed

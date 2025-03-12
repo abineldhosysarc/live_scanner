@@ -35,22 +35,47 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
-body.barcode-scanner-active {
+body.barcode-scanner-active *:not(.barcode-scanner-modal) {
     visibility: hidden;
-    --background: transparent;
-    --ion-background-color: transparent;
   }
   
-  // Ensure only scanner is visible
+  /* Show scanner modal with transparent background */
   .barcode-scanner-modal {
     visibility: visible;
-    background: transparent !important;
+    background: rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
-  @media (prefers-color-scheme: dark) {
-    .barcode-scanner-modal {
-      --background: transparent;
-      --ion-background-color: transparent;
+  /* Scanning indicator */
+  .scanning-indicator {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 300px;
+    
+    ion-spinner {
+      margin: 0 auto 10px;
+      display: block;
     }
+    
+    p {
+      margin: 0;
+    }
+  }
+  
+  /* Restore UI when scanning stops */
+  body:not(.barcode-scanner-active) * {
+    visibility: visible;
   }
   

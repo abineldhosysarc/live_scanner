@@ -1,7 +1,7 @@
 <ion-header class="headerBackground" mode="md">
   <ion-toolbar class="headerToolbar" mode="md">
     <ion-buttons slot="end">
-      <ion-button fill="clear" (click)="closeapp()">
+      <ion-button fill="clear" (click)="stopScanning()">
         <ion-icon name="close-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -10,16 +10,103 @@
 </ion-header>
 
 <ion-content>
-  <ion-button  (click)="startScan()">Start Scan</ion-button>
-<p>latest </p>
-  <ion-card *ngIf="scannedData">
-    <ion-card-header>
-      <ion-card-title>Scanned Barcode</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <p>{{ scannedData }}</p>
-    </ion-card-content>
-  </ion-card>
-
+  <!-- Scanning overlay -->
+  <div class="barcode-scanner-modal" *ngIf="isScanning">
+    <div class="scanning-indicator">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Scanning document... Please hold steady</p>
+    </div>
+  </div>
   
+  <!-- Main content -->
+  <div class="content-container" [class.hidden]="isScanning">
+    <ion-card class="instruction-card" *ngIf="!extractedText">
+      <ion-card-header>
+        <ion-card-title>Document Scanner</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>This scanner can identify and extract information from:</p>
+        <ul>
+          <li>PAN Cards</li>
+          <li>Aadhaar Cards</li>
+        </ul>
+        <p>Position the document in good lighting for best results.</p>
+      </ion-card-content>
+    </ion-card>
+    
+    <ion-button expand="block" (click)="startScanning()" class="scan-button">
+      <ion-icon name="scan-outline" slot="start"></ion-icon>
+      Scan Document
+    </ion-button>
+    
+    <!-- PAN Card Details -->
+    <ion-card *ngIf="documentType === 'PAN Card'">
+      <ion-card-header>
+        <ion-card-title>PAN Card Details</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-label position="stacked">PAN Number</ion-label>
+            <ion-input readonly [value]="panDetails.panNumber"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Name</ion-label>
+            <ion-input readonly [value]="panDetails.name"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Father's Name</ion-label>
+            <ion-input readonly [value]="panDetails.fatherName"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Date of Birth</ion-label>
+            <ion-input readonly [value]="panDetails.dob"></ion-input>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Aadhaar Card Details -->
+    <ion-card *ngIf="documentType === 'Aadhaar Card'">
+      <ion-card-header>
+        <ion-card-title>Aadhaar Card Details</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-label position="stacked">Aadhaar Number</ion-label>
+            <ion-input readonly [value]="aadhaarDetails.aadhaarNumber"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Name</ion-label>
+            <ion-input readonly [value]="aadhaarDetails.name"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Date of Birth</ion-label>
+            <ion-input readonly [value]="aadhaarDetails.dob"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Gender</ion-label>
+            <ion-input readonly [value]="aadhaarDetails.gender"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Mobile Number</ion-label>
+            <ion-input readonly [value]="aadhaarDetails.mobileNumber"></ion-input>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Unknown Document -->
+    <ion-card *ngIf="documentType === 'Unknown Document' && extractedText">
+      <ion-card-header>
+        <ion-card-title>Unrecognized Document</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>The scanned document could not be identified as a PAN or Aadhaar card.</p>
+        <p>Extracted Text:</p>
+        <ion-textarea readonly [value]="extractedText" rows="5"></ion-textarea>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

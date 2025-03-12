@@ -1,96 +1,73 @@
 import { Injectable } from '@angular/core';
-import {
-  BarcodeScanner,
-  BarcodeFormat,
-  BarcodesScannedEvent,
-} from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { CapacitorPluginMlKitTextRecognition } from '@pantrist/capacitor-plugin-ml-kit-text-recognition';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BarcodeScannerService {
-  private isScanning = false; // ✅ Prevent multiple scans
-
+  private isProcessing = false;
+  public textDetected$ = new BehaviorSubject<string>(''); // ✅ Store detected text
+  
   constructor() {}
-
-  // Start real-time scanning
-  async startScan() {
-    if (this.isScanning) return; // ✅ Prevent multiple scans
-    this.isScanning = true;
+  
+  // Start real-time text extraction using video frames
+  async startTextExtraction() {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
     
     document.querySelector('body')?.classList.add('barcode-scanner-active');
-
+    
     const listener = await BarcodeScanner.addListener(
       'barcodesScanned',
-      async (result: BarcodesScannedEvent) => {
-        if (result.barcodes.length > 0) {
-          console.log('Scanned Barcode:', result.barcodes[0].rawValue);
-
-          // ✅ Stop scanning and remove listener immediately
-          await this.stopScan();
-          await listener.remove();
+      async (result) => {
+        try {
+          if (!this.isProcessing) return;
+          
+          // ✅ Process each frame regardless of barcode detection
+          // Get the frame as base64 (even if no barcode is detected)
+          const frameData = result?.barcodes?.[0]?.rawValue || '';
+          
+          // Extract text from every frame
+          const textResult = await this.extractText(frameData);
+          console.log('Extracted Text:', textResult);
+          
+          if (textResult && textResult.length > 10) { // Only consider text of sufficient length
+            this.textDetected$.next(textResult); // ✅ Emit detected text
+            await this.stopTextExtraction(); // ✅ Stop scanning
+            await listener.remove(); // ✅ Remove listener
+          }
+        } catch (error) {
+          console.error('Error in processing frame:', error);
         }
       }
     );
-
-    await BarcodeScanner.startScan();
+    
+    await BarcodeScanner.startScan(); // ✅ Start continuous scanning
   }
-
-  // Stop scanning and close the camera
-  async stopScan() {
-    this.isScanning = false;
-    document.querySelector('body')?.classList.remove('barcode-scanner-active');
+  
+  // Extract text from video frame
+  private async extractText(base64Image: string): Promise<string | null> {
+    try {
+      // Skip processing if image data is empty
+      if (!base64Image) return null;
+      
+      const result = await CapacitorPluginMlKitTextRecognition.detectText({
+        base64Image: base64Image,
+      });
+      return result.text || null;
+    } catch (error) {
+      console.error('Text extraction failed:', error);
+      return null;
+    }
+  }
+  
+  // Stop scanning
+  async stopTextExtraction() {
+    this.isProcessing = false;
+    document.querySelector('body')?.classList.remove('barcode-scanner-active'); // ✅ Fixed class name
     await BarcodeScanner.removeAllListeners();
     await BarcodeScanner.stopScan();
-  }
-
-  // Scan a single barcode and return its value, then close the camera
-  async scanSingleBarcode(): Promise<string | null> {
-    if (this.isScanning) return null;
-    this.isScanning = true;
-
-    return new Promise(async (resolve) => {
-      document.querySelector('body')?.classList.add('barcode-scanner-active');
-
-      const listener = await BarcodeScanner.addListener(
-        'barcodesScanned',
-        async (result: BarcodesScannedEvent) => {
-          if (result.barcodes.length > 0) {
-            console.log('Scanned Barcode:', result.barcodes[0].rawValue);
-            resolve(result.barcodes[0].rawValue);
-          }
-
-          // ✅ Stop scanning and remove listener immediately
-          await this.stopScan();
-          await listener.remove();
-        }
-      );
-
-      await BarcodeScanner.startScan();
-    });
-  }
-
-  // Scan only QR codes
-  async scanQRCode() {
-    const { barcodes } = await BarcodeScanner.scan({
-      formats: [BarcodeFormat.QrCode],
-    });
-
-    // ✅ Stop scanning after detecting QR code
-    await this.stopScan();
-
-    return barcodes;
-  }
-
-  // Check camera permissions
-  async checkPermissions() {
-    const { camera } = await BarcodeScanner.checkPermissions();
-    return camera;
-  }
-
-  // Request camera permissions
-  async requestPermissions() {
-    const { camera } = await BarcodeScanner.requestPermissions();
-    return camera;
   }
 }
